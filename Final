@@ -1,0 +1,101 @@
+---
+title: "Project_3_doc"
+author: "James, Izzy"
+date: "2025-12-04"
+---
+
+```{r}
+cbb <- cbb_raw %>%
+  clean_names() %>%
+  filter(year >= 2014, year <= 2024) %>%
+  mutate(
+    win_pct = w / g,                          
+    net_eff = adjoe - adjde                   
+  )
+```
+
+```{r}
+cbb_model <- cbb %>%
+  select(
+    team, conf, year,
+    g, w, win_pct,
+    adjoe, adjde, net_eff, barthag,
+    efg_o, efg_d,
+    tor, tord,
+    orb, drb,
+    ftr, ftrd,
+    x2p_o = `x2p_o`, 
+    x2p_d = `x2p_d`,
+    x3p_o = `x3p_o`,
+    x3p_d = `x3p_d`,
+    adj_t, wab,
+    postseason, seed
+  )
+view(cbb)
+```
+
+```{r}
+
+ggplot(cbb_model, aes(x = net_eff, y = win_pct)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+    title = "Net Efficiency vs Win Percentage",
+    x = "Net Efficiency (ADJOE − ADJDE)",
+    y = "Win Percentage"
+  )
+
+
+
+cbb_eff <- cbb_model %>%
+  filter(year >= 2014) %>%   # last 10 years
+  mutate(
+    adjoe_z = as.numeric(scale(adjoe)),
+    adjde_z = as.numeric(scale(adjde)),
+    eff_score = adjoe_z - adjde_z   
+  )
+
+```
+
+```{r}
+model1 <- lm(
+  win_pct ~ 
+    adjoe + adjde +
+    efg_o + efg_d +
+    tor + orb + drb +
+    ftr + ftrd,
+  data = cbb_model
+)
+
+summary(model1)
+```
+
+```{r}
+library(reshape2)
+numeric_vars <- cbb_model %>%
+  select(
+    win_pct, net_eff,
+    adjoe, adjde,
+    efg_o, efg_d,
+    tor, tord,
+    orb, drb,
+    ftr, ftrd,
+    x2p_o, x2p_d,
+    x3p_o, x3p_d,
+    adj_t, wab
+  )
+
+cor_mat <- cor(numeric_vars, use = "pairwise.complete.obs")
+
+cor_long <- melt(cor_mat)
+
+ggplot(cor_long, aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "red", mid = "white", high = "blue", midpoint = 0) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(
+    title = "Correlation Heatmap",
+    x = "",
+    y = "",
+    fill = "Correlation"
+  )
