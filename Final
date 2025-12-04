@@ -99,3 +99,113 @@ ggplot(cor_long, aes(x = Var1, y = Var2, fill = value)) +
     y = "",
     fill = "Correlation"
   )
+```
+
+
+```{r}
+cbb_recent <- cbb %>%
+  filter(year >= 2014)
+
+
+#top 10 averages over 10 years
+
+team_avgs <- cbb_recent %>%
+  group_by(team) %>%
+  summarize(
+    mean_off  = mean(adjoe, na.rm = TRUE),
+    mean_def  = mean(adjde, na.rm = TRUE),
+    mean_net  = mean(net_eff, na.rm = TRUE),
+    seasons = n()
+  )
+
+#added seasons in case we wanted to filter if there was weird data
+#team_avgs_filtered <- team_avgs %>% 
+  #filter(seasons >= 5)
+
+top10_off <- team_avgs %>%
+  arrange(desc(mean_off)) %>%
+  slice_head(n = 10)
+
+top10_def <- team_avgs %>%
+  arrange(mean_def) %>%
+  slice_head(n = 10)
+
+top10_net <- team_avgs %>%
+  arrange(desc(mean_net)) %>%
+  slice_head(n = 10)
+
+bar_off <- ggplot(top10_off, aes(x = reorder(team, mean_off), y = mean_off)) +
+  geom_col() +
+  labs(title="Top 10 Offensive Teams (Avg ADJOE)", x="Team", y="Avg ADJOE")
+
+bar_def <- ggplot(top10_def, aes(x = reorder(team, mean_def), y = mean_def)) +
+  geom_col() +
+  labs(title="Top 10 Defensive Teams (Avg ADJDE, lower is better)", x="Team", y="Avg ADJDE")
+
+bar_net <- ggplot(top10_net, aes(x = reorder(team, mean_net), y = mean_net)) +
+  geom_col() +
+  labs(title="Top 10 Teams by Net Efficiency", x="Team", y="Avg Net Efficiency")
+
+
+
+#all values are so close together in bar, try ranked dot (liked it so then I made them pretty)
+ggplot(top10_off, aes(x = mean_off, y = reorder(team, mean_off))) +
+  geom_point(aes(color = mean_off), size = 9) +
+  scale_color_gradient(low = "#FFD8A8", high = "#D9480F") +
+  labs(
+    title = "Top 10 Offensive Teams (Avg ADJOE, 2014–2024)",
+    x = "Average Adjusted Offensive Efficiency (ADJOE)",
+    y = ""
+  ) +
+  theme_light(base_size = 14) +
+  theme(
+    text = element_text(family = 'serif'),
+    axis.text.y = element_text(color = "black", size = 12),
+    panel.grid.major.y = element_line(color = "grey85"),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank(),
+    legend.position = "none",
+    plot.title = element_text(face = "bold", size = 16)
+  )
+
+ggplot(top10_def, aes(x = mean_def, y = reorder(team, mean_def))) +
+  geom_point(aes(color = -mean_def), size = 9) +
+  scale_color_gradient(low = "#FFD8A8", high = "#D9480F") +
+  labs(
+    title = "Top 10 Defensive Teams (Avg ADJDE, 2014–2024)",
+    x = "Average Adjusted Defensive Efficiency (ADJDE)",
+    y = ""
+  ) +
+  theme_light(base_size = 14) +
+  theme(
+    text = element_text(family = 'serif'),
+    axis.text.y = element_text(color = "black", size = 12),
+    panel.grid.major.y = element_line(color = "grey85"),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank(),
+    legend.position = "none",
+    plot.title = element_text(face = "bold", size = 16)
+  )
+
+ggplot(top10_net, aes(x = mean_net, y = reorder(team, mean_net))) +
+  geom_point(aes(color = mean_net), size = 9) +
+  scale_color_gradient(low = "#FFD8A8", high = "#D9480F") +
+  labs(
+    title = "Top 10 Teams by Net Efficiency (2014–2024)",
+    x = "Average Net Efficiency (ADJOE - ADJDE)",
+    y = ""
+  ) +
+  theme_light(base_size = 14) +
+  theme(
+    text = element_text(family = 'serif'),
+    axis.text.y = element_text(color = "black", size = 12),
+    panel.grid.major.y = element_line(color = "grey85"),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank(),
+    legend.position = "none",
+    plot.title = element_text(face = "bold", size = 16)
+  )
+
+```
+
+
