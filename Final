@@ -5,6 +5,7 @@ date: "2025-12-04"
 ---
 
 ```{r}
+#The below chunk keeps only data from the years we intend on using. It also creates two new variables for easier analysis.
 cbb <- cbb_raw %>%
   clean_names() %>%
   filter(year >= 2014, year <= 2024) %>%
@@ -15,6 +16,7 @@ cbb <- cbb_raw %>%
 ```
 
 ```{r}
+#This builds a dataset with our two new variables, win_pct and net_eff
 cbb_model <- cbb %>%
   select(
     team, conf, year,
@@ -34,30 +36,9 @@ cbb_model <- cbb %>%
 view(cbb)
 ```
 
-```{r}
-
-ggplot(cbb_model, aes(x = net_eff, y = win_pct)) +
-  geom_point(alpha = 0.4) +
-  geom_smooth(method = "lm", se = FALSE) +
-  labs(
-    title = "Net Efficiency vs Win Percentage",
-    x = "Net Efficiency (ADJOE − ADJDE)",
-    y = "Win Percentage"
-  )
-
-
-
-cbb_eff <- cbb_model %>%
-  filter(year >= 2014) %>%   # last 10 years
-  mutate(
-    adjoe_z = as.numeric(scale(adjoe)),
-    adjde_z = as.numeric(scale(adjde)),
-    eff_score = adjoe_z - adjde_z   
-  )
-
-```
 
 ```{r}
+#This chunk creates a multiple linear regression model to predict win percentage, using the new variable we created during our cleaning process
 model1 <- lm(
   win_pct ~ 
     adjoe + adjde +
@@ -71,6 +52,7 @@ summary(model1)
 ```
 
 ```{r}
+#This chunk of code is selecting numeric variables for analysis on correlation
 library(reshape2)
 numeric_vars <- cbb_model %>%
   select(
@@ -84,14 +66,16 @@ numeric_vars <- cbb_model %>%
     x3p_o, x3p_d,
     adj_t, wab
   )
-
+#Create correaltion matrix
 cor_mat <- cor(numeric_vars, use = "pairwise.complete.obs")
 
+#formats matrix for ggplot
 cor_long <- melt(cor_mat)
 
+#creating the correlation heat map
 ggplot(cor_long, aes(x = Var1, y = Var2, fill = value)) +
-  geom_tile() +
-  scale_fill_gradient2(low = "red", mid = "white", high = "blue", midpoint = 0) +
+  geom_tile() + #creates squares
+  scale_fill_gradient2(low = "red", mid = "white", high = "blue", midpoint = 0) + #makes the colors representing correlation
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   labs(
     title = "Correlation Heatmap",
@@ -207,5 +191,7 @@ ggplot(top10_net, aes(x = mean_net, y = reorder(team, mean_net))) +
   )
 
 ```
+In this project we explore and analyze different statistical variables that impact team success in NCAA basketball. Focusing on data from the 2013-2024 seasons, we used tools like R and Tableau to clean and visualize different performances over a decade. We pulled our data from Bart Torvik’s T-rank database, which came in the form of numerous CSV files. The data included 25 variables recorded for over 350 teams, in addition to two new variables we created during our cleaning process. The goal of this project was to 1. Determine which statistical variables are the strongest predictors of success in the regular season. 2. Determine what are the top ten most offensively and defensively effective NCAA teams in the last ten years.
+	We began by exploring the correlation between various statistics such as turnover rates, rebounding rates, win percentages, and shooting percentages. In order to analyze these correlations we created a correlation heat map to show related predctors. Based on previous knowledge of basketball and correlations visualized through the heat map, we were able to determine predictors we wanted to use for our multiple linear regression model. This multiple linear regression model was used to identify the impact of each chosen variables on win percentages. Our linear regression model showed us that for every unit increase in effective field goal percentage win percentage increased by 0.042, thus making it the strongest positive predictor of success in the regular season. This is reiterated by a large t-value of 46.42. On the other hand, our model also showed us that for every unit increase in turnover rate our win percentage decreased by -0.036, making it the strongest negative predictor of success in the regular season. This is supported by a large negative t-value of -0.036. By using R to analyze each statistical predictor we were able to successfully determine and visualize the strongest predictors of regular season success in NCAA basketball over the span of ten years.
 
 
