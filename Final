@@ -5,6 +5,12 @@ date: "2025-12-04"
 ---
 
 ```{r}
+library(tidyverse)
+library(janitor)
+library(reshape2)
+```
+
+```{r}
 #The below chunk keeps only data from the years we intend on using. It also creates two new variables for easier analysis.
 cbb <- cbb_raw %>%
   clean_names() %>%
@@ -33,7 +39,6 @@ cbb_model <- cbb %>%
     adj_t, wab,
     postseason, seed
   )
-view(cbb)
 ```
 
 
