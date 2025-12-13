@@ -4,7 +4,7 @@ author: "James, Izzy"
 date: "2025-12-04"
 ---
 
-```{r}
+```{r, warning = FALSE, message = FALSE}
 library(tidyverse)
 library(janitor)
 library(reshape2)
@@ -92,13 +92,8 @@ ggplot(cor_long, aes(x = Var1, y = Var2, fill = value)) +
 
 
 ```{r}
-cbb_recent <- cbb %>%
-  filter(year >= 2014)
-
-
-#top 10 averages over 10 years
-
-team_avgs <- cbb_recent %>%
+#team averages for all efficiency over the 10 years
+team_avgs <- cbb %>%
   group_by(team) %>%
   summarize(
     mean_off  = mean(adjoe, na.rm = TRUE),
@@ -107,10 +102,11 @@ team_avgs <- cbb_recent %>%
     seasons = n()
   )
 
-#added seasons in case we wanted to filter if there was weird data
+#added seasons in case we wanted to filter if there was weird data like:
 #team_avgs_filtered <- team_avgs %>% 
   #filter(seasons >= 5)
 
+#create top 10 tables for mean offensive, defensive, and net efficiency
 top10_off <- team_avgs %>%
   arrange(desc(mean_off)) %>%
   slice_head(n = 10)
@@ -122,25 +118,28 @@ top10_def <- team_avgs %>%
 top10_net <- team_avgs %>%
   arrange(desc(mean_net)) %>%
   slice_head(n = 10)
+```
 
+```{r}
+#tried bar charts
 bar_off <- ggplot(top10_off, aes(x = reorder(team, mean_off), y = mean_off)) +
   geom_col() +
-  labs(title="Top 10 Offensive Teams (Avg ADJOE)", x="Team", y="Avg ADJOE")
+  labs(title = "Top 10 Offensive Teams (Avg ADJOE)", x = "Team", y = "Avg ADJOE")
 
 bar_def <- ggplot(top10_def, aes(x = reorder(team, mean_def), y = mean_def)) +
   geom_col() +
-  labs(title="Top 10 Defensive Teams (Avg ADJDE, lower is better)", x="Team", y="Avg ADJDE")
+  labs(title = "Top 10 Defensive Teams (Avg ADJDE, lower is better)", x = "Team", y = "Avg ADJDE")
 
 bar_net <- ggplot(top10_net, aes(x = reorder(team, mean_net), y = mean_net)) +
   geom_col() +
-  labs(title="Top 10 Teams by Net Efficiency", x="Team", y="Avg Net Efficiency")
+  labs(title = "Top 10 Teams by Net Efficiency", x = "Team", y = "Avg Net Efficiency")
 
 
+#all values are so close together in the bar chart, hard to see a difference, so tried ranked dot plot since these are calculated values and not frequencies (liked the plot so then I made them pretty)
 
-#all values are so close together in bar, try ranked dot (liked it so then I made them pretty)
 ggplot(top10_off, aes(x = mean_off, y = reorder(team, mean_off))) +
   geom_point(aes(color = mean_off), size = 9) +
-  scale_color_gradient(low = "#FFD8A8", high = "#D9480F") +
+  scale_color_gradient(low = "#FFD8A8", high = "#D9480F") + #gradient shows darker scores are better
   labs(
     title = "Top 10 Offensive Teams (Avg ADJOE, 2014–2024)",
     x = "Average Adjusted Offensive Efficiency (ADJOE)",
@@ -148,7 +147,7 @@ ggplot(top10_off, aes(x = mean_off, y = reorder(team, mean_off))) +
   ) +
   theme_light(base_size = 14) +
   theme(
-    text = element_text(family = 'serif'),
+    text = element_text(family = "serif"),
     axis.text.y = element_text(color = "black", size = 12),
     panel.grid.major.y = element_line(color = "grey85"),
     panel.grid.major.x = element_blank(),
@@ -157,8 +156,9 @@ ggplot(top10_off, aes(x = mean_off, y = reorder(team, mean_off))) +
     plot.title = element_text(face = "bold", size = 16)
   )
 
+
 ggplot(top10_def, aes(x = mean_def, y = reorder(team, mean_def))) +
-  geom_point(aes(color = -mean_def), size = 9) +
+  geom_point(aes(color = -mean_def), size = 9) + #opposite gradient since lower is better
   scale_color_gradient(low = "#FFD8A8", high = "#D9480F") +
   labs(
     title = "Top 10 Defensive Teams (Avg ADJDE, 2014–2024)",
@@ -167,7 +167,7 @@ ggplot(top10_def, aes(x = mean_def, y = reorder(team, mean_def))) +
   ) +
   theme_light(base_size = 14) +
   theme(
-    text = element_text(family = 'serif'),
+    text = element_text(family = "serif"),
     axis.text.y = element_text(color = "black", size = 12),
     panel.grid.major.y = element_line(color = "grey85"),
     panel.grid.major.x = element_blank(),
@@ -175,6 +175,7 @@ ggplot(top10_def, aes(x = mean_def, y = reorder(team, mean_def))) +
     legend.position = "none",
     plot.title = element_text(face = "bold", size = 16)
   )
+
 
 ggplot(top10_net, aes(x = mean_net, y = reorder(team, mean_net))) +
   geom_point(aes(color = mean_net), size = 9) +
@@ -186,7 +187,7 @@ ggplot(top10_net, aes(x = mean_net, y = reorder(team, mean_net))) +
   ) +
   theme_light(base_size = 14) +
   theme(
-    text = element_text(family = 'serif'),
+    text = element_text(family = "serif"),
     axis.text.y = element_text(color = "black", size = 12),
     panel.grid.major.y = element_line(color = "grey85"),
     panel.grid.major.x = element_blank(),
@@ -198,5 +199,6 @@ ggplot(top10_net, aes(x = mean_net, y = reorder(team, mean_net))) +
 ```
 In this project we explore and analyze different statistical variables that impact team success in NCAA basketball. Focusing on data from the 2013-2024 seasons, we used tools like R and Tableau to clean and visualize different performances over a decade. We pulled our data from Bart Torvik’s T-rank database, which came in the form of numerous CSV files. The data included 25 variables recorded for over 350 teams, in addition to two new variables we created during our cleaning process. The goal of this project was to 1. Determine which statistical variables are the strongest predictors of success in the regular season. 2. Determine what are the top ten most offensively and defensively effective NCAA teams in the last ten years.
 	We began by exploring the correlation between various statistics such as turnover rates, rebounding rates, win percentages, and shooting percentages. In order to analyze these correlations we created a correlation heat map to show related predctors. Based on previous knowledge of basketball and correlations visualized through the heat map, we were able to determine predictors we wanted to use for our multiple linear regression model. This multiple linear regression model was used to identify the impact of each chosen variables on win percentages. Our linear regression model showed us that for every unit increase in effective field goal percentage win percentage increased by 0.042, thus making it the strongest positive predictor of success in the regular season. This is reiterated by a large t-value of 46.42. On the other hand, our model also showed us that for every unit increase in turnover rate our win percentage decreased by -0.036, making it the strongest negative predictor of success in the regular season. This is supported by a large negative t-value of -0.036. By using R to analyze each statistical predictor we were able to successfully determine and visualize the strongest predictors of regular season success in NCAA basketball over the span of ten years.
-
+So for our second question, instead of analyzing individual seasons, we wanted to understand which programs consistently performed at a high level across the entire decade. To answer this, we used three efficiency metrics from the dataset: ADJOE (Adjusted Offensive Efficiency), ADJDE (Adjusted Defensive Efficiency), and Net Efficiency (ADJOE - ADJDE), a combined metric we created to capture overall performance. To prepare the dataset, we filtered the data to the last ten seasons and created a new variable for net efficiency. Using group_by(team) and summarize(), we calculated each team’s average ADJOE, average ADJDE, and average net efficiency across the decade. This allowed us to compare long-term program strength rather than year-to-year variation. Then, we decided to use ranked dot plots instead of bar charts for all three rankings. In our exploratory tests, bar charts made differences appear minimal, especially since efficiency values are close together. Dot plots provided a cleaner, more precise comparison. Our visualization choices align with Cairo’s “Five Qualities of Great Visualizations,” especially functional design, which emphasizes helping audiences interpret information correctly. Choosing dot plots instead of bar charts supports this principle. Because the values for offensive, defensive, and net efficiency are close together, dot plots make subtle differences easier to see. This functional clarity helps the audience immediately understand how teams compare across a decade. This and stylistic choices also align with Healy’s discussion of bad taste and his recommendation to reduce unnecessary ink and visual clutter, and to simplify graphics. I think the gradient orange color scale also supports contrast in terms of CRAP principles and guides viewers toward the highest-performing teams without clutter.
+  The first ranked dot plot revealed the top offensive programs of the decade. It also showed clear top, middle, and bottom groups. Duke and Gonzaga emerged as clear leaders, followed by a middle grouping of Villanova, Baylor, Kentucky, Iowa, and Purdue, and then a bottom three of North Carolina, Kansas, and Arizona. Next, our second plot of defensive efficiency ranking told a slightly different story. Virginia stood out as the top defensive program by a large margin, followed by San Diego State with another large margin. Then, Kansas, Gonzaga, Florida, VCU, Tennessee, North Carolina, Wisconsin, and Cincinnati had much closer scores. Notably, only a few teams appeared in both the top defensive and top offensive rankings, suggesting that elite defenses do not always correspond to elite offenses. Overall, this second chart showed that the top defensive-efficient teams have two clear standouts, and the rest are clustered. Lastly, the net efficiency plot revealed the overall most efficient teams and told an interesting story. Gonzaga ranked number one overall, which aligned with their presence near the top of both earlier plots. Kansas and North Carolina were ranked in the top 6 overall, consistent with their presence in both of our previous plots. Then, both the number-one teams in the offensive and defensive charts appeared in the rankings: Duke and Virginia. One interesting takeaway is that most of the top net efficiency teams were already seen in the top offensive efficiency plot, indicating that long-term overall dominance is driven more heavily by offensive strength than by defensive strength alone. But defense is still important. For example, Baylor ranked fourth in offensive efficiency but dropped to tenth in overall net efficiency, suggesting that their defensive performance is not at the same level as their offensive performance. Combining insights from all three plots, we successfully identified the strongest teams over the past ten years and were able to examine and understand the differences among the top ten across efficiency categories.
 
